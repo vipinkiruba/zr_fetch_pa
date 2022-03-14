@@ -1,0 +1,73 @@
+*&---------------------------------------------------------------------*
+*& Report ZR_FETCH_PA
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZR_FETCH_PA.
+
+TYPES: BEGIN OF STRUCT,
+  NAME TYPE STRING,
+  AGE TYPE STRING,
+  GENDER TYPE STRING,
+  END OF STRUCT.
+
+DATA : IT_DATA TYPE TABLE OF STRUCT,
+      WA_DATA TYPE STRUCT,
+      LV_FILENAME TYPE RLGRAP-FILENAME,
+  LV_STRING(100) TYPE C.
+
+  PARAMETERS : P_PATH TYPE RLGRAP-FILENAME.
+
+**  upload the data from presentation server
+
+  CALL FUNCTION 'GUI_UPLOAD'
+    EXPORTING
+      FILENAME                      = 'C:\Users\Vipin\Desktop\kaar\BDC\pa.txt'
+     FILETYPE                      = 'ASC'
+     HAS_FIELD_SEPARATOR           = 'x'
+    TABLES
+      DATA_TAB                      = IT_DATA
+   EXCEPTIONS
+     FILE_OPEN_ERROR               = 1
+     FILE_READ_ERROR               = 2
+     NO_BATCH                      = 3
+     GUI_REFUSE_FILETRANSFER       = 4
+     INVALID_TYPE                  = 5
+     NO_AUTHORITY                  = 6
+     UNKNOWN_ERROR                 = 7
+     BAD_DATA_FORMAT               = 8
+     HEADER_NOT_ALLOWED            = 9
+     SEPARATOR_NOT_ALLOWED         = 10
+     HEADER_TOO_LONG               = 11
+     UNKNOWN_DP_ERROR              = 12
+     ACCESS_DENIED                 = 13
+     DP_OUT_OF_MEMORY              = 14
+     DISK_FULL                     = 15
+     DP_TIMEOUT                    = 16
+     OTHERS                        = 17
+            .
+  IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  LV_FILENAME = P_PATH.
+
+*  syntax to upload to application server
+  OPEN DATASET LV_FILENAME FOR OUTPUT IN TEXT MODE ENCODING DEFAULT.
+
+  LOOP AT IT_DATA INTO WA_DATA.
+
+    CONCATENATE WA_DATA-NAME
+    WA_DATA-AGE
+    WA_DATA-GENDER
+    INTO LV_STRING SEPARATED BY ' '.
+
+    TRANSFER LV_STRING TO LV_FILENAME.
+
+    ENDLOOP.
+
+  CLOSE DATASET LV_FILENAME.
+
+  IF SY-SUBRC = 0.
+    MESSAGE 'data got uploaded' TYPE 'I'.
+    ENDIF.
